@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Panel Privado del Presentador — Habitación 707 (Caleb Villegas Medero)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --bg: #07070a;
+    --card: #101018;
+    --line: #27273a;
+    --vio: #8b5cf6;
+    --red: #dc2626;
+    --ok: #10b981;
+  }
+  body {
+    background-color: var(--bg);
+    color: #f4f4f5;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-image:
+      linear-gradient(rgba(139,92,246,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139,92,246,.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .font-math { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
+  .tab-btn {
+    padding: 0.55rem 0.9rem;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .tab-btn.active {
+    background: var(--vio);
+    color: #fff;
+    box-shadow: 0 0 18px rgba(139,92,246,.35);
+  }
+  .tab-btn.inactive {
+    background: #14141f;
+    border-color: #2c2c42;
+    color: #a1a1aa;
+  }
+  .tab-btn.inactive:hover {
+    border-color: var(--vio);
+    color: #fff;
+  }
+  /* Stacked fractions & vinculum radicals matching index 4.html */
+  .m { white-space: normal; overflow-wrap: anywhere; }
+  .frac {
+    display: inline-flex;
+    flex-direction: column;
+    vertical-align: middle;
+    text-align: center;
+    margin: 0 0.2em;
+    line-height: 1.15;
+    white-space: nowrap;
+    font-size: 0.9em;
+  }
+  .frac > .num { border-bottom: 1.5px solid currentColor; padding: 0 0.25em 0.08em; }
+  .frac > .den { padding: 0.08em 0.25em 0; }
+  .rad { display: inline-block; white-space: nowrap; }
+  .rad > .rs { font-size: 1.1em; line-height: 1; margin-right: -1px; }
+  .rad > .vin { display: inline-block; border-top: 1.5px solid currentColor; padding: 0.05em 0.18em 0; line-height: 1.15; }
+  ::-webkit-scrollbar { height: 7px; width: 7px; }
+  ::-webkit-scrollbar-thumb { background: #2c2c44; border-radius: 8px; }
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- TOP BAR WITH 3-MINUTE TIMER -->
+  <header class="sticky top-0 z-40 bg-[#07070a]/95 backdrop-blur-md border-b border-zinc-800">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-violet-600/20 border border-violet-500/50 flex items-center justify-center text-lg">🎯</div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm sm:text-base font-extrabold text-white tracking-tight">GUÍA DEL PRESENTADOR — HABITACIÓN 707</h1>
+            <span class="hidden md:inline-block text-[10px] uppercase tracking-widest px-2 py-0.5 rounded bg-red-950 text-red-300 border border-red-800 font-bold">Uso Privado • Caleb</span>
+          </div>
+          <p class="text-[11px] text-zinc-400">Todo lo que necesitas explicar + respuestas exactas de los 5 niveles (30 ejercicios)</p>
+        </div>
+      </div>
+
+      <!-- 3-Minute Timer Widget -->
+      <div class="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-1.5">
+        <span class="text-[11px] text-zinc-400 font-semibold hidden sm:inline">⏱️ Tiempo (3 min):</span>
+        <span id="timer-display" class="font-math text-sm sm:text-base font-extrabold text-emerald-400 min-w-[48px] text-center">03:00</span>
+        <button onclick="toggleTimer()" id="btn-timer" class="px-2.5 py-1 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold transition">Iniciar</button>
+        <button onclick="resetTimer()" class="px-2 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition" title="Reiniciar">↺</button>
+      </div>
+    </div>
+
+    <!-- MAIN NAVIGATION TABS -->
+    <div class="max-w-6xl mx-auto px-4 pb-3 flex gap-2 overflow-x-auto">
+      <button class="tab-btn active" id="nav-guion" onclick="switchTab('guion')">🎙️ 1. Guion 3 Minutos</button>
+      <button class="tab-btn inactive" id="nav-respuestas" onclick="switchTab('respuestas')">🔑 2. Respuestas (5 Niveles)</button>
+      <button class="tab-btn inactive" id="nav-temas" onclick="switchTab('temas')">🧠 3. Entiende los 6 Temas</button>
+      <button class="tab-btn inactive" id="nav-qa" onclick="switchTab('qa')">❓ 4. Preguntas del Maestro</button>
+      <button class="tab-btn inactive" id="nav-rubrica" onclick="switchTab('rubrica')">✅ 5. Rúbrica (100 pts)</button>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6">
+
+    <!-- ==================== TAB 1: GUION 3 MINUTOS ==================== -->
+    <section id="tab-guion" class="space-y-6">
+      <div class="card p-5 border-violet-500/40 bg-violet-950/15 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-extrabold uppercase tracking-wider text-violet-300">Plan de Presentación Oral</span>
+          <h2 class="text-xl sm:text-2xl font-extrabold text-white mt-0.5">Cómo dominar tus 3 minutos frente a la clase</h2>
+          <p class="text-xs sm:text-sm text-zinc-300 mt-1">
+            Recuerda la regla de oro de la presentación: <strong>no tienes que explicar las 6 ecuaciones a fondo</strong>. Explicas cómo funciona el juego, con qué lo hiciste, por qué lo escogiste, resuelves 5 habitaciones rápido y dejas que el salón haga 1 para revelar a <strong>Framaldo</strong>.
+          </p>
+        </div>
+        <button onclick="switchTab('respuestas')" class="shrink-0 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold shadow">
+          Ir directo a las Respuestas →
+        </button>
+      </div>
+
+      <!-- Timed Script Blocks -->
+      <div class="grid gap-4">
+        <!-- Block 1 -->
+        <div class="card p-5 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <input type="checkbox" class="w-4 h-4 accent-violet-500 cursor-pointer" />
+              <span class="font-math text-xs font-bold px-2.5 py-1 rounded bg-violet-500/20 text-violet-300 border border-violet-500/40">0:00 – 0:35</span>
+              <h3 class="text-base sm:text-lg font-extrabold text-white">1. Introducción, por qué lo escogí y con qué lo realicé</h3>
+            </div>
+            <span class="text-xs text-zinc-400">Pantalla: Menú Principal</span>
+          </div>
+          <div class="rounded-xl bg-zinc-950 border border-zinc-800 p-4 text-sm text-zinc-200 leading-relaxed space-y-2">
+            <p>«Buenos días. Mi proyecto se llama <strong>Habitación 707</strong>. En vez de hacer un tríptico o póster normal, escogí hacerlo como un <strong>videojuego interactivo de terror</strong> porque es más llamativo y te obliga a practicar los pasos en orden en vez de solo leer fórmulas.»</p>
+            <p>«Lo realicé programándolo en un solo archivo web usando <strong>HTML, Tailwind CSS y JavaScript</strong>, con sonidos generados por código (<em>Web Audio API</em>) y gráficos vectoriales (<em>SVG</em>), y lo subí a <strong>GitHub Pages</strong> para que el maestro y cualquier estudiante lo pueda jugar desde el link en Schoology.»</p>
+          </div>
+          <div class="text-xs text-violet-300 font-medium">💡 Acción en pantalla: Señala el título, los 5 niveles disponibles (y los 3 que dicen "Viene pronto") y mueve el mouse para que noten el efecto de linterna.</div>
+        </div>
+
+        <!-- Block 2 -->
+        <div class="card p-5 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <input type="checkbox" class="w-4 h-4 accent-violet-500 cursor-pointer" />
+              <span class="font-math text-xs font-bold px-2.5 py-1 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40">0:35 – 1:15</span>
+              <h3 class="text-base sm:text-lg font-extrabold text-white">2. Cómo funciona el juego y el Manual de Campo</h3>
+            </div>
+            <span class="text-xs text-zinc-400">Pantalla: Abrir Manual de Campo</span>
+          </div>
+          <div class="rounded-xl bg-zinc-950 border border-zinc-800 p-4 text-sm text-zinc-200 leading-relaxed space-y-2">
+            <p>«La mecánica es simple: tienes <strong>3 vidas</strong> y <strong>6 habitaciones</strong> por nivel. En cada cuarto te sale una ecuación y abajo hay <strong>7 fichas regadas</strong> (4 pasos correctos y 3 trampas). Tienes que tocar las 4 fichas en orden para llenar los cuadritos. Si aciertas, desbloqueas una pista física del monstruo; si fallas, pierdes una vida y cuando te queda 1 vida se activa una alerta con latidos.»</p>
+            <p>«Si alguien se tranca, arriba siempre está el botón de <strong>Manual de Campo</strong>. Aquí están organizados los 6 tipos de ecuaciones con todo lo que pide la guía: cómo reconocerla, los pasos, consejos, el error común, un ejemplo resuelto paso a paso y un ejercicio de práctica.»</p>
+          </div>
+          <div class="text-xs text-sky-300 font-medium">💡 Acción en pantalla: Abre el Manual de Campo por 10 segundos, haz clic en 1 o 2 pestañas para que el maestro vea las 7 secciones completas y ciérralo.</div>
+        </div>
+
+        <!-- Block 3 -->
+        <div class="card p-5 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <input type="checkbox" class="w-4 h-4 accent-violet-500 cursor-pointer" />
+              <span class="font-math text-xs font-bold px-2.5 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">1:15 – 1:45</span>
+              <h3 class="text-base sm:text-lg font-extrabold text-white">3. Cómo se relaciona con Precálculo y qué ayuda más</h3>
+            </div>
+            <span class="text-xs text-zinc-400">Pantalla: Habitación 1 abierta</span>
+          </div>
+          <div class="rounded-xl bg-zinc-950 border border-zinc-800 p-4 text-sm text-zinc-200 leading-relaxed space-y-2">
+            <p>«Cada habitación corresponde exactamente a uno de los <strong>6 tipos de ecuaciones de Precálculo</strong>: lineales, cuadráticas, polinómicas, valor absoluto, radicales y racionales. Además tiene 5 niveles de dificultad progresiva por si el maestro o alguien quiere probar casos más difíciles como soluciones extrañas o valores prohibidos.»</p>
+            <p>«La parte que considero que más ayuda a otro estudiante son <strong>la caja roja de Error Común antes de resolver</strong> y las <strong>fichas trampa</strong>, porque te enseñan justo dónde falla la mayoría de la gente (como cambiar mal un signo, factorizar sin igualar a cero o no verificar raíces).»</p>
+          </div>
+        </div>
+
+        <!-- Block 4 -->
+        <div class="card p-5 space-y-3 border-emerald-500/40">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <input type="checkbox" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
+              <span class="font-math text-xs font-bold px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">1:45 – 3:00</span>
+              <h3 class="text-base sm:text-lg font-extrabold text-white">4. Demostración en vivo (Tú haces 5, el salón hace 1)</h3>
+            </div>
+            <span class="text-xs text-emerald-400 font-bold">¡Clímax: Framaldo!</span>
+          </div>
+          <div class="rounded-xl bg-zinc-950 border border-zinc-800 p-4 text-sm text-zinc-200 leading-relaxed space-y-2">
+            <p>«Vamos a jugar el Nivel 1 rápido para que vean el final. Yo voy a resolver las primeras habitaciones explicando el procedimiento y <strong>les dejo una para que me digan ustedes qué ficha acomodar</strong>.»</p>
+            <ul class="list-disc pl-5 space-y-1 text-xs sm:text-sm text-zinc-300">
+              <li><strong>Habitación 1 (Lineal) — Tú:</strong> Acomoda rápido los 4 pasos mencionando que distribuiste el <span class="font-math text-white">-3</span> y moviste variables a un lado. Sale pista 1 (muy alto).</li>
+              <li><strong>Habitación 2 (Cuadrática) — Tú:</strong> Factorizas en <span class="font-math text-white">(x+3)(x+4)=0</span> y usas Producto Cero. Sale pista 2 (atlético, cero cuernos).</li>
+              <li><strong>Habitación 3 (Polinómica) — Tú:</strong> Agrupación + diferencia de cuadrados. Sale pista 3 (mitad uniforme de baloncesto).</li>
+              <li><strong>Habitación 4 (Valor Absoluto) — ⭐ EL SALÓN:</strong> Ponlos a participar aquí (<span class="font-math text-violet-300">|2x + 5| - 3 = 6</span>). Pregunta: <em>"¿Qué hacemos primero antes de abrir los dos casos? ¿Cuál ficha va en el Cuadrito 1?"</em> Sale pista 4 (mitad uniforme de voleibol).</li>
+              <li><strong>Habitación 5 (Radical) y 6 (Racional) — Tú:</strong> En la 5 destaca que siempre hay que <strong>verificar</strong>; en la 6 destaca los <strong>valores prohibidos</strong> (<span class="font-math text-white">x ≠ -3, 0</span>).</li>
+              <li><strong>Cierre:</strong> Presionas <em>«Revelar identidad del monstruo»</em>, aparece <strong>FRAMALDO</strong> y cierras con: <em>«Y así, resolviendo las 6 ecuaciones, descubrimos que el monstruo es Framaldo. Gracias.»</em></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tech Flex Box -->
+      <div class="card p-4 bg-zinc-900/70">
+        <h4 class="text-xs font-extrabold uppercase tracking-wider text-zinc-400 mb-2">✨ Detalles técnicos cool de tu juego que puedes mencionar si te sobran segundos</h4>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs text-zinc-300">
+          <div class="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800"><strong class="text-violet-300">Notación matemática real:</strong> Fracciones apiladas y raíces con barra superior generadas por código.</div>
+          <div class="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800"><strong class="text-red-400">Ambiente inmersivo:</strong> Linterna que sigue el cursor, parpadeo de luz y latido rojo al quedar 1 vida.</div>
+          <div class="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800"><strong class="text-emerald-400">Audio 100% en código:</strong> Música de suspenso, pasos y efectos con Web Audio API sin archivos MP3.</div>
+          <div class="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800"><strong class="text-amber-300">Escalable:</strong> 5 niveles completos (30 retos) + 3 niveles extra listos como "Viene pronto".</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: RESPUESTAS (5 NIVELES) ==================== -->
+    <section id="tab-respuestas" class="hidden space-y-5">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-extrabold text-white">Hoja Maestra de Respuestas (30 Ejercicios)</h2>
+          <p class="text-xs sm:text-sm text-zinc-400">Exactamente igual a tu archivo <span class="font-math text-violet-300">index 4.html</span>. Selecciona el nivel para ver el orden exacto de los 4 cuadritos y qué decir en cada uno.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-zinc-400">Mostrar trampas:</label>
+          <input type="checkbox" id="toggle-traps" checked onchange="renderAnswers()" class="w-4 h-4 accent-red-500 cursor-pointer" />
+        </div>
+      </div>
+
+      <!-- Level Selector Pills -->
+      <div id="level-pills" class="flex flex-wrap gap-2"></div>
+
+      <!-- Answers List -->
+      <div id="answers-container" class="space-y-4"></div>
+    </section>
+
+    <!-- ==================== TAB 3: ENTIENDE LOS 6 TEMAS ==================== -->
+    <section id="tab-temas" class="hidden space-y-5">
+      <div>
+        <h2 class="text-xl sm:text-2xl font-extrabold text-white">Entiende los 6 Tipos de Ecuaciones (Explicación Fácil)</h2>
+        <p class="text-xs sm:text-sm text-zinc-400">Resumen directo de tu Manual de Campo para que entiendas la lógica detrás de cada tema y puedas explicarlo sin memorizar de botella.</p>
+      </div>
+      <div id="topics-container" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+    </section>
+
+    <!-- ==================== TAB 4: PREGUNTAS DEL MAESTRO ==================== -->
+    <section id="tab-qa" class="hidden space-y-5">
+      <div>
+        <h2 class="text-xl sm:text-2xl font-extrabold text-white">Preguntas que te puede hacer el Maestro (y qué contestar)</h2>
+        <p class="text-xs sm:text-sm text-zinc-400">Si al terminar tus 3 minutos el profesor te hace una pregunta para confirmar que dominas la matemática, aquí tienes la respuesta directa.</p>
+      </div>
+      <div id="qa-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </section>
+
+    <!-- ==================== TAB 5: RÚBRICA 100 PTS ==================== -->
+    <section id="tab-rubrica" class="hidden space-y-5">
+      <div class="card p-5 border-emerald-500/40 bg-emerald-950/15 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-xl font-extrabold text-white">Verificación contra la Rúbrica Oficial (100 Puntos)</h2>
+          <p class="text-xs sm:text-sm text-zinc-300 mt-0.5">Todo está cubierto entre tu juego (<span class="font-math text-violet-300">index 4.html</span>) y tu presentación oral de 3 minutos.</p>
+        </div>
+        <div class="text-right">
+          <div class="text-xs text-zinc-400">Total verificado</div>
+          <div id="rubric-score" class="font-math text-2xl font-extrabold text-emerald-400">100 / 100</div>
+        </div>
+      </div>
+
+      <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-zinc-900 border-b border-zinc-800 text-zinc-400 uppercase text-[11px]">
+              <tr>
+                <th class="p-3.5 w-10 text-center">Listo</th>
+                <th class="p-3.5">Criterio</th>
+                <th class="p-3.5">Dónde está en tu proyecto</th>
+                <th class="p-3.5 text-right">Valor</th>
+              </tr>
+            </thead>
+            <tbody id="rubric-rows" class="divide-y divide-zinc-800/80"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card p-4 border-amber-600/50 bg-amber-950/20 text-xs sm:text-sm text-amber-200">
+        <strong>📌 Recordatorio de entrega en Schoology:</strong> Sube el enlace público de GitHub Pages de tu juego (<span class="font-math">index.html</span>) a Schoology a tiempo (entregas tardías bajan a un máximo de 80/100). Este archivo de presentador es <strong>solo para ti</strong>, no tienes que entregárselo al maestro.
+      </div>
+    </section>
+
+  </main>
+
+<script>
+/* =========================================================
+   RENDERIZADOR MATEMÁTICO (igual al de index 4.html)
+   ========================================================= */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+const OPR=/[A-Za-z0-9²³⁴⁵.]/;
+function fmt(raw){
+  let s=esc(raw);
+  let pos=s.length, idx;
+  while((idx=s.lastIndexOf('/',pos-1))>=0){
+    let l,num,r,den,j,d;
+    if(s[idx-1]===')'){
+      d=0;
+      for(j=idx-1;j>=0;j--){ if(s[j]===')')d++; else if(s[j]==='('){d--; if(d===0)break;} }
+      l=j; num=s.slice(j+1,idx-1);
+    }else{
+      j=idx-1; while(j>=0&&OPR.test(s[j]))j--;
+      l=j+1; num=s.slice(l,idx);
+    }
+    if(s[idx+1]==='('){
+      d=0;
+      for(j=idx+1;j<s.length;j++){ if(s[j]==='(')d++; else if(s[j]===')'){d--; if(d===0)break;} }
+      r=j+1; den=s.slice(idx+2,j);
+    }else{
+      j=idx+1; while(j<s.length&&OPR.test(s[j]))j++;
+      r=j; den=s.slice(idx+1,r);
+    }
+    const html='<span class="frac"><span class="num">'+num+'</span><span class="den">'+den+'</span></span>';
+    s=s.slice(0,l)+html+s.slice(r);
+    pos=l;
+    if(pos<=0)break;
+  }
+  let out='',i=0;
+  while(i<s.length){
+    if(s[i]==='√'){
+      let inner,j,d;
+      if(s[i+1]==='('){
+        d=0;
+        for(j=i+1;j<s.length;j++){ if(s[j]==='(')d++; else if(s[j]===')'){d--; if(d===0)break;} }
+        inner=s.slice(i+2,j); i=j+1;
+      }else{
+        j=i+1; while(j<s.length&&/[A-Za-z0-9²]/.test(s[j]))j++;
+        inner=s.slice(i+1,j); i=j;
+      }
+      out+='<span class="rad"><span class="rs">√</span><span class="vin">'+inner+'</span></span>';
+    }else{ out+=s[i]; i++; }
+  }
+  return '<span class="m">'+out+'</span>';
+}
+function rich(t){
+  return String(t).split('`').map((seg,k)=>k%2?fmt(seg):esc(seg)).join('');
+}
+
+/* =========================================================
+   TEMPORIZADOR DE 3 MINUTOS
+   ========================================================= */
+let timeLeft = 180;
+let timerInterval = null;
+function updateTimerUI(){
+  const m = String(Math.floor(timeLeft / 60)).padStart(2,'0');
+  const s = String(timeLeft % 60).padStart(2,'0');
+  const el = document.getElementById('timer-display');
+  el.textContent = `${m}:${s}`;
+  el.className = 'font-math text-sm sm:text-base font-extrabold min-w-[48px] text-center ' +
+    (timeLeft <= 30 ? 'text-red-400' : timeLeft <= 60 ? 'text-amber-400' : 'text-emerald-400');
+}
+function toggleTimer(){
+  const btn = document.getElementById('btn-timer');
+  if(timerInterval){
+    clearInterval(timerInterval);
+    timerInterval = null;
+    btn.textContent = 'Seguir';
+  } else {
+    if(timeLeft <= 0) timeLeft = 180;
+    btn.textContent = 'Pausar';
+    timerInterval = setInterval(()=>{
+      timeLeft--;
+      updateTimerUI();
+      if(timeLeft <= 0){
+        clearInterval(timerInterval);
+        timerInterval = null;
+        btn.textContent = 'Listo';
+      }
+    }, 1000);
+  }
+}
+function resetTimer(){
+  clearInterval(timerInterval);
+  timerInterval = null;
+  timeLeft = 180;
+  document.getElementById('btn-timer').textContent = 'Iniciar';
+  updateTimerUI();
+}
+
+/* =========================================================
+   NAVEGACIÓN DE PESTAÑAS
+   ========================================================= */
+const TABS = ['guion','respuestas','temas','qa','rubrica'];
+function switchTab(name){
+  TABS.forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('hidden', t !== name);
+    const btn = document.getElementById('nav-'+t);
+    btn.className = 'tab-btn ' + (t === name ? 'active' : 'inactive');
+  });
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* =========================================================
+   DATOS EXACTOS DE LOS 5 NIVELES (COINCIDEN 100% CON index 4.html)
+   ========================================================= */
+const TIPOS = [
+  '1. Ecuación Lineal',
+  '2. Ecuación Cuadrática',
+  '3. Ecuación Polinómica (grado > 2)',
+  '4. Ecuación con Valor Absoluto',
+  '5. Ecuación Radical',
+  '6. Ecuación Racional'
+];
+
+const LEVELS = [
+  {
+    name: 'Nivel 1: La Puerta 707',
+    diff: 'Básico',
+    color: '#22c55e',
+    rooms: [
+      {
+        title: 'El Pomo Frío',
+        eq: '5x - 3(x - 2) = 4x - 6',
+        ok: ['5x - 3x + 6 = 4x - 6', '2x + 6 = 4x - 6', '-2x = -12', 'x = 6'],
+        bad: ['5x - 3x - 6 = 4x - 6', '6x = 0', 'x = -6'],
+        why: 'Multiplicas -3 por x y por -2 (ojo: menos por menos da +6). Reducimos 5x - 3x = 2x, pasamos 4x restando y el 6 restando (-2x = -12), y dividimos entre -2.',
+        clue: 'El código 6 abre la puerta y ves una silueta muy alta.',
+        recommend: false
+      },
+      {
+        title: 'Huellas en la Alfombra',
+        eq: 'x² + 7x + 12 = 0',
+        ok: ['(x + 3)(x + 4) = 0', 'x + 3 = 0 o x + 4 = 0', 'x = -3', 'x = -4'],
+        bad: ['(x - 3)(x - 4) = 0', 'x = 3', 'x = 4'],
+        why: 'Ya está igualada a 0. Buscas dos números que multiplicados den 12 y sumados den 7 (3 y 4). Luego aplicas Producto Cero y cambias signos al despejar.',
+        clue: 'El escáner confirma una postura atlética y cero cuernos.',
+        recommend: false
+      },
+      {
+        title: 'La Caja del Armario',
+        eq: 'x³ - 2x² - 9x + 18 = 0',
+        ok: ['x²(x - 2) - 9(x - 2) = 0', '(x - 2)(x - 3)(x + 3) = 0', 'x = 2', 'x = 3, x = -3'],
+        bad: ['(x + 2)(x² - 9) = 0', 'x = -2', 'x = 9'],
+        why: 'Como hay 4 términos, agrupas en parejas antes de usar división sintética. Sale (x - 2)(x² - 9) = 0 y el x² - 9 es diferencia de cuadrados: (x - 3)(x + 3).',
+        clue: 'Abres la caja y encuentras la mitad izquierda de un uniforme de baloncesto.',
+        recommend: false
+      },
+      {
+        title: 'El Espejo del Baño',
+        eq: '|2x + 5| - 3 = 6',
+        ok: ['|2x + 5| = 9', '2x + 5 = 9 o 2x + 5 = -9', 'x = 2', 'x = -7'],
+        bad: ['|2x + 5| = 3', 'No tiene solución (∅)', 'x = -2'],
+        why: 'PRIMERO aíslas las barras pasando el -3 a sumar (6 + 3 = 9). Como 9 es positivo, abres los dos casos (= 9 y = -9) y despejas.',
+        clue: 'El espejo revela la mitad derecha: un uniforme de voleibol.',
+        recommend: true
+      },
+      {
+        title: 'La Cámara de Vapor',
+        eq: '√(3x + 1) + 2 = 6',
+        ok: ['√(3x + 1) = 4', '3x + 1 = 16', 'x = 5', '√16 + 2 = 6 (Válida)'],
+        bad: ['3x + 1 = 4', '3x + 1 = 8', 'Solución extraña'],
+        why: 'Aíslas el radical restando 2 (= 4), elevas ambos lados al cuadrado (4² = 16), despejas x = 5 y verificas en la original: √16 + 2 = 4 + 2 = 6 ✓.',
+        clue: 'Se limpia la cámara y ves su rostro: rasgos asiáticos y mirada seria.',
+        recommend: false
+      },
+      {
+        title: 'El Expediente',
+        eq: '5/(x + 3) = 2/x',
+        ok: ['Valores prohibidos: x ≠ -3, 0', '5x = 2(x + 3)', '3x = 6', 'x = 2 (Válida)'],
+        bad: ['5x = 2x + 3', 'x = -3', 'x = 1'],
+        why: 'Marcas valores prohibidos igualando los denominadores a 0 (x ≠ -3, 0). Multiplicas cruzado (o por el MCD), queda 5x = 2x + 6 → 3x = 6 → x = 2. Como 2 no está prohibido, es válida.',
+        clue: 'El código 2 desbloquea el expediente final.',
+        recommend: false
+      }
+    ]
+  },
+  {
+    name: 'Nivel 2: El Pasillo Oscuro',
+    diff: 'Intermedio',
+    color: '#eab308',
+    rooms: [
+      {
+        title: 'La Primera Luz',
+        eq: '4(3x - 2) - 2x = 5(x + 2) + 7',
+        ok: ['12x - 8 - 2x = 5x + 10 + 7', '10x - 8 = 5x + 17', '5x = 25', 'x = 5'],
+        bad: ['12x - 2 - 2x = 5x + 2 + 7', '15x = 9', 'x = -5'],
+        why: 'Distribuyes el 4 y el 5 en ambos lados, reduces semejantes (10x - 8 = 5x + 17), pasas 5x a restar y el 8 a sumar → 5x = 25 → x = 5.',
+        clue: 'El código 5 enciende la luz del pasillo y proyecta una sombra enorme: es una figura muy alta.'
+      },
+      {
+        title: 'Sombras en la Pared',
+        eq: 'x² - 4x = 21',
+        ok: ['x² - 4x - 21 = 0', '(x - 7)(x + 3) = 0', 'x = 7', 'x = -3'],
+        bad: ['(x + 7)(x - 3) = 0', 'x = -7', 'x = 3'],
+        why: 'Primero pasas el 21 restando para igualar a 0. Dos números que multiplicados den -21 y sumados -4 son -7 y +3. Despejas cambiando signos.',
+        clue: 'Las huellas en el piso son largas y firmes: alguien atlético. En la sombra no hay cuernos.'
+      },
+      {
+        title: 'Los Casilleros',
+        eq: '2x³ - 18x = 0',
+        ok: ['2x(x² - 9) = 0', '2x(x - 3)(x + 3) = 0', 'x = 0', 'x = 3, x = -3'],
+        bad: ['x² - 9 = 0', 'x = 9', 'Solo x = 3 y x = -3'],
+        why: 'Sacas factor común 2x (¡nunca dividas entre x porque pierdes la solución x = 0!). Luego factorizas la diferencia de cuadrados x² - 9.',
+        clue: 'En un casillero encuentras la mitad izquierda de un uniforme de baloncesto rojo y negro.'
+      },
+      {
+        title: 'Fotos Rotas',
+        eq: '3|x - 4| - 5 = 10',
+        ok: ['3|x - 4| = 15', '|x - 4| = 5', 'x = 9', 'x = -1'],
+        bad: ['|x - 4| = 15', 'x = 1', 'No tiene solución (∅)'],
+        why: 'Sumas 5 (= 15) y divides entre 3 (= 5) para aislar las barras. Abres x - 4 = 5 (da 9) y x - 4 = -5 (da -1).',
+        clue: 'Una foto rota muestra la mitad derecha: camiseta de voleibol de manga corta.'
+      },
+      {
+        title: 'La Cámara de Seguridad',
+        eq: '2√(x - 1) - 3 = 5',
+        ok: ['2√(x - 1) = 8', '√(x - 1) = 4', 'x - 1 = 16', 'x = 17 (Válida)'],
+        bad: ['x - 1 = 4', 'x = 5', 'x = 15'],
+        why: 'Aíslas el radical pasando +3 (= 8) y dividiendo entre 2 (= 4). Elevas al cuadrado (16), sumas 1 → x = 17. Verificas: 2√16 - 3 = 8 - 3 = 5 ✓.',
+        clue: 'Una cámara de seguridad guardó su cara: rasgos asiáticos y expresión seria.'
+      },
+      {
+        title: 'El Cajón del Fondo',
+        eq: '6/(x - 2) + 1 = 9/(x - 2)',
+        ok: ['Valor prohibido: x ≠ 2', '6 + (x - 2) = 9', 'x + 4 = 9', 'x = 5 (Válida)'],
+        bad: ['6 + 1 = 9', 'x = 2', 'x = 11'],
+        why: 'Prohibido x ≠ 2. Multiplicas TODO por (x - 2), incluyendo el 1 suelto! Queda 6 + x - 2 = 9 → x + 4 = 9 → x = 5 (válida).',
+        clue: 'El código 5 abre el cajón del fondo y aparece un expediente con un nombre sin terminar.'
+      }
+    ]
+  },
+  {
+    name: 'Nivel 3: Cámara de Espejos',
+    diff: 'Avanzado',
+    color: '#f97316',
+    rooms: [
+      {
+        title: 'El Reflejo Torcido',
+        eq: '(2x + 1)/3 - (x - 2)/2 = 2',
+        ok: ['2(2x + 1) - 3(x - 2) = 12', '4x + 2 - 3x + 6 = 12', 'x + 8 = 12', 'x = 4'],
+        bad: ['4x + 2 - 3x - 6 = 12', 'x - 4 = 12', 'x = 16'],
+        why: 'Multiplicas toda la ecuación por el MCD que es 6 (incluso el 2 de la derecha → 12). Cuidado con -3 por -2 que da +6. Sale x = 4.',
+        clue: 'El primer espejo se enciende con el código 4 y refleja una figura muy alta detrás de ti.'
+      },
+      {
+        title: 'El Espejo Roto',
+        eq: '2x² - 5x = 3',
+        ok: ['2x² - 5x - 3 = 0', '(2x + 1)(x - 3) = 0', 'x = -1/2', 'x = 3'],
+        bad: ['(2x - 1)(x + 3) = 0', 'x = 1/2', 'x = -3'],
+        why: 'Igualas a 0. Como a = 2, factorizas en (2x + 1)(x - 3) = 0. Despejas cada paréntesis: x = -1/2 y x = 3.',
+        clue: 'Cada reflejo muestra la misma postura atlética, y en ninguno hay cuernos.'
+      },
+      {
+        title: 'La Sala Doble',
+        eq: 'x³ + 8 = 0',
+        ok: ['(x + 2)(x² - 2x + 4) = 0', 'x + 2 = 0', 'x² - 2x + 4 = 0 (Sin raíces reales)', 'Solución real: x = -2'],
+        bad: ['(x + 2)(x² + 2x + 4) = 0', 'x = 2', 'x = -2, x = 2'],
+        why: 'Suma de cubos: a³ + b³ = (a + b)(a² - ab + b²). El segundo paréntesis nunca tiene raíces reales, así que la única solución real es x = -2.',
+        clue: 'Detrás de un espejo hay una caja con la mitad izquierda de un uniforme de baloncesto.'
+      },
+      {
+        title: 'El Marco Vacío',
+        eq: '4|2x - 1| + 9 = 5',
+        ok: ['4|2x - 1| = -4', '|2x - 1| = -1', 'Valor absoluto no puede ser negativo', 'No tiene solución (∅)'],
+        bad: ['2x - 1 = -1 o 2x - 1 = 1', 'x = 0', 'x = 1'],
+        why: 'Al aislar las barras queda |2x - 1| = -1. Como una distancia jamás es negativa, te detienes ahí: no tiene solución (∅).',
+        clue: 'En el marco vacío aparece la mitad derecha: un uniforme de voleibol de manga corta.'
+      },
+      {
+        title: 'El Espejo de Vapor',
+        eq: '√(x + 6) = x',
+        ok: ['x + 6 = x²', '(x - 3)(x + 2) = 0', 'x = -2 (Solución extraña)', 'Solución válida: x = 3'],
+        bad: ['x + 6 = x', '(x + 3)(x - 2) = 0', 'x = 3 y x = -2 válidas'],
+        why: 'Elevas al cuadrado → x² - x - 6 = 0 → salen 3 y -2. Al verificar en √(x + 6) = x: con -2 da √4 = -2 (FALSO, es solución extraña). Solo sirve x = 3.',
+        clue: 'El vapor se aclara y el espejo muestra su cara: rasgos asiáticos y mirada seria.'
+      },
+      {
+        title: 'El Último Reflejo',
+        eq: 'x/(x - 2) + 1 = 2/(x - 2)',
+        ok: ['Valor prohibido: x ≠ 2', 'x + (x - 2) = 2', '2x = 4 → x = 2', 'No tiene solución (x = 2 prohibido)'],
+        bad: ['x + 1 = 2', 'x = 2 (Válida)', 'x = 1'],
+        why: 'Prohibido x ≠ 2. Multiplicas todo por (x - 2) y resuelves: sale x = 2, pero justo ese valor hace 0 el denominador! Por eso no tiene solución.',
+        clue: 'El último reflejo se rompe y deja ver un expediente con su nombre.'
+      }
+    ]
+  },
+  {
+    name: 'Nivel 4: La Bóveda Maldita',
+    diff: 'Experto',
+    color: '#ef4444',
+    rooms: [
+      {
+        title: 'La Cerradura',
+        eq: '3 - 2[4x - (x + 5)] = 5x + 2',
+        ok: ['3 - 2(3x - 5) = 5x + 2', '13 - 6x = 5x + 2', '11 = 11x', 'x = 1'],
+        bad: ['3 - 6x - 10 = 5x + 2', '-11x = -9', 'x = -1'],
+        why: 'Resuelves de adentro hacia afuera: 4x - x - 5 = 3x - 5. Luego -2(3x - 5) = -6x + 10. Juntas 3 + 10 = 13 → 13 - 6x = 5x + 2 → x = 1.',
+        clue: 'El código 1 abre la reja y detrás hay una silueta muy alta que respira despacio.'
+      },
+      {
+        title: 'El Pasillo de Cajas',
+        eq: '3x² + 10x = 8',
+        ok: ['3x² + 10x - 8 = 0', '(3x - 2)(x + 4) = 0', 'x = 2/3', 'x = -4'],
+        bad: ['(3x + 2)(x - 4) = 0', 'x = -2/3', 'x = 4'],
+        why: 'Igualas a 0. Factorizas buscando que la multiplicación cruzada dé +10x: 3x(4) - 2(x) = 12x - 2x = 10x. Despejas x = 2/3 y x = -4.',
+        clue: 'Las huellas en el polvo son de alguien atlético, y su sombra no tiene cuernos.'
+      },
+      {
+        title: 'La Caja Fuerte',
+        eq: 'x³ - 7x + 6 = 0',
+        ok: ['División sintética (1, 0, -7, 6) con x = 1', '(x - 1)(x² + x - 6) = 0', '(x - 1)(x + 3)(x - 2) = 0', 'x = 1, x = -3, x = 2'],
+        bad: ['División sintética (1, -7, 6) sin 0', '(x + 1)(x² - x - 6) = 0', 'x = -1, x = 3, x = -2'],
+        why: '¡Falta el término x²! Por eso debes poner 0 en la división sintética: (1, 0, -7, 6). Probando x = 1 da residuo 0 y factorizas el cuadrático.',
+        clue: 'En la caja fuerte aparece la mitad izquierda de un uniforme de baloncesto rojo y negro.'
+      },
+      {
+        title: 'El Cofre Oxidado',
+        eq: '|3x - 2| = |x + 6|',
+        ok: ['Caso 1: 3x - 2 = x + 6', 'Caso 2: 3x - 2 = -(x + 6)', 'x = 4', 'x = -1'],
+        bad: ['3x - 2 = -x + 6', 'x = 2', 'No tiene solución (∅)'],
+        why: 'Cuando ambos lados tienen valor absoluto, abres dos casos: uno igual y otro con un signo negativo afectando a TODO el lado derecho -(x + 6) = -x - 6.',
+        clue: 'El cofre guarda la mitad derecha: camiseta de voleibol violeta y blanca.'
+      },
+      {
+        title: 'La Reja Cerrada',
+        eq: '√(2x + 7) = x + 2',
+        ok: ['2x + 7 = x² + 4x + 4', '(x + 3)(x - 1) = 0', 'x = -3 (Solución extraña)', 'Solución válida: x = 1'],
+        bad: ['2x + 7 = x² + 4', 'x = -3 y x = 1 válidas', 'x = -3'],
+        why: 'Al elevar (x + 2)² usas el trinomio x² + 4x + 4 (no x² + 4). Salen -3 y 1. Verificando: con -3 da √1 = -1 (falso, extraña). Solo sirve x = 1.',
+        clue: 'Una foto antigua dentro de la reja muestra su cara: rasgos asiáticos y expresión seria.'
+      },
+      {
+        title: 'La Vitrina Final',
+        eq: '1/(x - 1) + 1/(x + 1) = 4/(x² - 1)',
+        ok: ['Valores prohibidos: x ≠ 1, -1', '(x + 1) + (x - 1) = 4', '2x = 4', 'x = 2 (Válida)'],
+        bad: ['1 + 1 = 4', 'x = 1', 'x = 4'],
+        why: 'Como x² - 1 = (x - 1)(x + 1), ese es el MCD y prohíbe x ≠ 1, -1. Multiplicas todo por el MCD, se cancelan los 1 y queda 2x = 4 → x = 2 (válida).',
+        clue: 'La vitrina final guarda el expediente con su nombre completo.'
+      }
+    ]
+  },
+  {
+    name: 'Nivel 5: Juicio de Framaldo',
+    diff: 'Maestro',
+    color: '#a855f7',
+    rooms: [
+      {
+        title: 'El Estrado',
+        eq: '(3x - 1)/4 - (2x + 3)/3 = (x - 7)/6',
+        ok: ['3(3x - 1) - 4(2x + 3) = 2(x - 7)', 'x - 15 = 2x - 14', '-x = 1', 'x = -1'],
+        bad: ['9x - 3 - 8x + 12 = 2x - 14', 'x = 1', 'x = -29'],
+        why: 'El MCD de 4, 3 y 6 es 12. Multiplicas todo por 12. Ojo con -4(2x + 3) = -8x - 12. Reduciendo queda x - 15 = 2x - 14 → x = -1.',
+        clue: 'El código -1 abre el estrado del juicio y ves una figura muy alta sentada al fondo.'
+      },
+      {
+        title: 'Los Testigos',
+        eq: '6x² - 7x - 5 = 0',
+        ok: ['(3x - 5)(2x + 1) = 0', '3x - 5 = 0 o 2x + 1 = 0', 'x = 5/3', 'x = -1/2'],
+        bad: ['(3x + 5)(2x - 1) = 0', 'x = -5/3', 'x = 1/2'],
+        why: 'Factorizas 6x² - 7x - 5 en (3x - 5)(2x + 1) porque 3x(1) - 5(2x) = -7x. Aplicas Producto Cero: x = 5/3 y x = -1/2.',
+        clue: 'Los testigos describen a alguien atlético, y todos dicen que no tiene cuernos.'
+      },
+      {
+        title: 'La Evidencia',
+        eq: 'x⁴ - 13x² + 36 = 0',
+        ok: ['(x² - 9)(x² - 4) = 0', '(x - 3)(x + 3)(x - 2)(x + 2) = 0', 'x = 3, x = -3', 'x = 2, x = -2'],
+        bad: ['(x² + 9)(x² + 4) = 0', 'Solo x = 3 y x = 2', 'x = 9, x = 4'],
+        why: 'Tiene forma cuadrática: dos números que multiplicados den 36 y sumados -13 son -9 y -4. Luego aplicas diferencia de cuadrados a ambos para sacar las 4 raíces.',
+        clue: 'La evidencia: la mitad izquierda de un uniforme de baloncesto.'
+      },
+      {
+        title: 'La Defensa',
+        eq: '|x² - 5| = 4',
+        ok: ['x² - 5 = 4 o x² - 5 = -4', 'x² = 9 o x² = 1', 'x = 3, x = -3', 'x = 1, x = -1'],
+        bad: ['Solo x² = 9', 'No tiene solución (∅)', 'x = 9, x = 1'],
+        why: 'Las barras ya están aisladas. Abres dos casos (= 4 y = -4), salen x² = 9 y x² = 1, y al sacar raíz cuadrada recuerda poner ± para obtener las 4 soluciones.',
+        clue: 'La defensa presenta la otra mitad: un uniforme de voleibol.'
+      },
+      {
+        title: 'El Veredicto',
+        eq: 'x - √(3x + 7) = 1',
+        ok: ['√(3x + 7) = x - 1', 'x² - 5x - 6 = 0', 'x = -1 (Solución extraña)', 'Solución válida: x = 6'],
+        bad: ['x² + 1 = 3x + 7', 'x = 6 y x = -1 válidas', 'x = -6'],
+        why: 'Aíslas el radical: √(3x + 7) = x - 1. Elevas al cuadrado (x² - 2x + 1 = 3x + 7 → x² - 5x - 6 = 0). Salen 6 y -1. Con -1 da -1 - 2 = -3 ≠ 1 (extraña). Solo sirve x = 6.',
+        clue: 'El juez levanta la capucha del acusado y se ve su rostro: rasgos asiáticos y mirada seria.'
+      },
+      {
+        title: 'El Expediente Final',
+        eq: '2/(x - 3) + 3/(x + 2) = 10/(x² - x - 6)',
+        ok: ['Valores prohibidos: x ≠ 3, -2', '2(x + 2) + 3(x - 3) = 10', '5x = 15 → x = 3', 'No tiene solución (x = 3 prohibido)'],
+        bad: ['x = 3 (Válida)', '5x + 13 = 10', 'x = -2'],
+        why: 'Factorizas el denominador de la derecha: x² - x - 6 = (x - 3)(x + 2), así que x ≠ 3, -2. Al resolver sale x = 3, que está prohibido → No tiene solución.',
+        clue: 'El veredicto está sellado en el expediente final: solo falta leer su nombre.'
+      }
+    ]
+  }
+];
+
+let selectedLevel = 0;
+
+function renderLevelPills(){
+  const el = document.getElementById('level-pills');
+  el.innerHTML = LEVELS.map((L, i) => {
+    const active = i === selectedLevel;
+    return `<button onclick="selectedLevel=${i};renderLevelPills();renderAnswers();" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold border transition ${active ? 'text-white shadow-lg' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'}" style="${active ? `background:${L.color}25;border-color:${L.color};color:#fff;` : ''}">
+      <span class="inline-block w-2 h-2 rounded-full mr-1.5" style="background:${L.color}"></span>Nivel ${i+1} (${L.diff})
+    </button>`;
+  }).join('');
+}
+
+function renderAnswers(){
+  const L = LEVELS[selectedLevel];
+  const showTraps = document.getElementById('toggle-traps').checked;
+  const container = document.getElementById('answers-container');
+
+  container.innerHTML = L.rooms.map((R, idx) => `
+    <div class="card p-5 space-y-4 ${R.recommend ? 'border-amber-500/70 bg-amber-950/10' : ''}">
+      <div class="flex flex-wrap items-start justify-between gap-2 border-b border-zinc-800 pb-3">
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-[11px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/40">${TIPOS[idx]}</span>
+            ${R.recommend ? '<span class="text-[11px] font-extrabold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/50">⭐ RECOMENDADA PARA EL SALÓN</span>' : ''}
+          </div>
+          <h3 class="text-base sm:text-lg font-extrabold text-white mt-1.5">Habitación ${idx+1}: ${esc(R.title)}</h3>
+        </div>
+        <div class="font-math text-base sm:text-xl font-extrabold text-white bg-zinc-950 px-4 py-2 rounded-xl border border-zinc-800">
+          ${fmt(R.eq)}
+        </div>
+      </div>
+
+      <!-- 4 EXACT SLOTS -->
+      <div>
+        <div class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-400 mb-2">✅ Orden Exacto de los 4 Cuadritos (Tócalos en este orden):</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          ${R.ok.map((step, sIdx) => `
+            <div class="rounded-xl p-3 bg-emerald-950/30 border border-emerald-600/60">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Cuadrito ${sIdx+1} ${sIdx===3 ? '(Final)' : `(Paso ${sIdx+1})`}</div>
+              <div class="font-math text-xs sm:text-sm font-bold text-white mt-1">${fmt(step)}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- EXPLANATION FOR CALEB -->
+      <div class="rounded-xl bg-zinc-950 border border-zinc-800 p-3.5 text-xs sm:text-sm text-zinc-300 leading-relaxed">
+        <strong class="text-violet-300">🧠 Qué explicar si te preguntan:</strong> ${rich(R.why)}
+      </div>
+
+      ${showTraps ? `
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <span class="font-extrabold text-red-400 uppercase tracking-wider">❌ Trampas (NO tocar):</span>
+        ${R.bad.map(b => `<span class="font-math px-2.5 py-1 rounded-lg bg-red-950/40 border border-red-800/70 text-red-200 line-through">${fmt(b)}</span>`).join('')}
+      </div>` : ''}
+
+      <div class="text-xs text-zinc-400">
+        <strong class="text-zinc-200">🔦 Pista al ganar:</strong> ${esc(R.clue)}
+      </div>
+    </div>
+  `).join('');
+}
+
+/* =========================================================
+   TAB 3: LOS 6 TEMAS EXPLICADOS FÁCIL
+   ========================================================= */
+const TOPICS = [
+  {
+    title: '1. Ecuaciones Lineales',
+    detect: 'La `x` tiene exponente 1 (sin cuadrados, sin raíces, sin barras y sin estar abajo en una fracción).',
+    keyRule: 'Quita paréntesis, junta variables a un lado y números al otro (cambiando el signo) y despeja.',
+    trap: 'Cruzar un número al otro lado del igual sin cambiarle el signo, o olvidar multiplicar el segundo término dentro del paréntesis.',
+    ex: '3(2x - 4) + 5 = 2x + 9  →  x = 4',
+    say: '«En las lineales el truco es mover la `x` más pequeña hacia la más grande para no enredarte con negativos.»'
+  },
+  {
+    title: '2. Ecuaciones Cuadráticas',
+    detect: 'El exponente más alto es 2 (`ax² + bx + c = 0`).',
+    keyRule: 'SIEMPRE iguala a 0 primero, factoriza en dos paréntesis y usa la Propiedad del Producto Cero (cada factor = 0).',
+    trap: 'Intentar factorizar sin igualar a 0, o sacar la respuesta con el mismo signo del paréntesis (de `(x + 3) = 0` sale `-3`, no `+3`).',
+    ex: 'x² - 3x = 10  →  (x - 5)(x + 2) = 0  →  x = 5, -2',
+    say: '«Si no está igualada a 0 no puedo usar el Producto Cero, porque solo el 0 garantiza que al menos un factor tiene que ser 0.»'
+  },
+  {
+    title: '3. Ecuaciones Polinómicas (grado > 2)',
+    detect: 'Exponente 3, 4 o mayor igualado a 0 (`x³`, `x⁴`...).',
+    keyRule: 'Antes de hacer división sintética prueba: factor común, agrupación (4 términos), diferencia de cuadrados o suma/diferencia de cubos. Si no funciona, usa raíces racionales + división sintética.',
+    trap: 'Olvidar poner un `0` en la división sintética cuando falta un exponente (ejemplo: `x³ - 7x + 6` lleva `1, 0, -7, 6`).',
+    ex: 'x³ - 4x² + x + 6 = 0  →  x = -1, 2, 3',
+    say: '«La división sintética es la última opción; primero siempre buscamos factor común o agrupación para ahorrar tiempo.»'
+  },
+  {
+    title: '4. Ecuaciones con Valor Absoluto',
+    detect: 'La variable está encerrada entre barras verticales `| |`.',
+    keyRule: 'Primero deja las barras completamente solas. Si queda igualado a un negativo, NO hay solución (∅). Si es positivo, abre dos casos (+ y -).',
+    trap: 'Abrir los dos casos antes de despejar lo que está afuera de las barras, o ponerse a resolver cuando dio igual a un negativo.',
+    ex: '2|x - 3| + 1 = 9  →  |x - 3| = 4  →  x = 7, -1',
+    say: '«El valor absoluto mide distancia desde el cero; por eso nunca puede dar negativo, y cuando da positivo existen dos lados posibles.»'
+  },
+  {
+    title: '5. Ecuaciones Radicales',
+    detect: 'La variable está debajo de una raíz `√(...)`.',
+    keyRule: 'Aísla la raíz, eleva ambos lados a la potencia del índice (al cuadrado si es √), resuelve y VERIFICA obligatoriamente en la original.',
+    trap: 'No verificar y aceptar una solución extraña (extraneous solution), o elevar `(x + 2)²` como `x² + 4` en vez de `x² + 4x + 4`.',
+    ex: '√(x + 2) = x  →  x = 2 (x = -1 es extraña)',
+    say: '«Elevar al cuadrado puede colar respuestas falsas que llamamos soluciones extrañas; por eso verificar al final no es opcional.»'
+  },
+  {
+    title: '6. Ecuaciones Racionales',
+    detect: 'Hay fracciones con la variable en el denominador.',
+    keyRule: 'Saca primero los valores prohibidos (denominador = 0), multiplica TODA la ecuación por el MCD, resuelve y revisa que la respuesta no esté prohibida.',
+    trap: 'Olvidar multiplicar un número entero suelto por el MCD, o entregar una respuesta que vuelve 0 el denominador.',
+    ex: '4/(x - 1) + 2 = 10/(x - 1)  →  x = 4 (x ≠ 1)',
+    say: '«Dividir entre cero no existe; por eso anotamos `x ≠ ...` desde el segundo uno para no caer en un valor prohibido.»'
+  }
+];
+
+function renderTopics(){
+  document.getElementById('topics-container').innerHTML = TOPICS.map(t => `
+    <div class="card p-5 space-y-3">
+      <h3 class="text-base sm:text-lg font-extrabold text-violet-300">${esc(t.title)}</h3>
+      <div class="space-y-2 text-xs sm:text-sm text-zinc-300">
+        <p><strong class="text-white">🔍 Cómo verla rápido:</strong> ${rich(t.detect)}</p>
+        <p><strong class="text-emerald-400">📋 Regla clave:</strong> ${rich(t.keyRule)}</p>
+        <p class="p-2.5 rounded-lg bg-red-950/35 border border-red-800/60 text-red-200"><strong class="text-red-400">⚠️ Trampa típica:</strong> ${rich(t.trap)}</p>
+        <p class="font-math text-xs bg-zinc-950 p-2.5 rounded-lg border border-zinc-800 text-zinc-200"><strong class="text-violet-400">Manual:</strong> ${fmt(t.ex)}</p>
+        <p class="italic text-zinc-400 pt-1">🎙️ Frase lista: ${rich(t.say)}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* =========================================================
+   TAB 4: PREGUNTAS DEL MAESTRO
+   ========================================================= */
+const QAS = [
+  {
+    q: '¿Por qué en una ecuación cuadrática es obligatorio igualarla a 0 antes de factorizar?',
+    a: 'Por la <strong>Propiedad del Producto Cero</strong>: si dos factores multiplicados dan 0 (A · B = 0), al menos uno tiene que ser 0. Si estuviera igualada a otro número como 10, hay infinitas combinaciones que dan 10 y no podríamos despejar cada paréntesis.'
+  },
+  {
+    q: '¿Qué es exactamente una solución extraña (extraneous solution) y por qué aparece?',
+    a: 'Es una respuesta que surge matemáticamente cuando elevamos ambos lados de una ecuación radical al cuadrado, pero que al sustituirla en la ecuación original produce una falsedad (como `√4 = -2`). Por eso siempre hay que verificar en la ecuación original.'
+  },
+  {
+    q: '¿Qué debes intentar en una ecuación polinómica antes de lanzarte a división sintética?',
+    a: 'Primero ordenar de mayor a menor grado y revisar <strong>factor común</strong>. Después, según los términos: <strong>agrupación</strong> (si hay 4), <strong>diferencia de cuadrados</strong> o <strong>suma/diferencia de cubos</strong>. Solo si nada de eso aplica, usamos posibles raíces racionales y división sintética.'
+  },
+  {
+    q: '¿Cuándo una ecuación de valor absoluto no tiene solución?',
+    a: 'Cuando después de aislar completamente las barras `| |`, el otro lado queda igualado a un <strong>número negativo</strong> (por ejemplo `|2x - 1| = -1` en el Nivel 3), porque el valor absoluto representa una distancia y jamás puede ser negativo.'
+  },
+  {
+    q: '¿Por qué hay que verificar los resultados en las ecuaciones racionales?',
+    a: 'Porque al multiplicar por el Mínimo Común Denominador eliminamos las fracciones temporalmente, y puede salir una respuesta que en la ecuación original hacía que el denominador fuera `0` (un <strong>valor prohibido</strong>), lo cual es indefinido.'
+  },
+  {
+    q: '¿Cómo hiciste el juego y por qué elegiste ese formato?',
+    a: 'Lo desarrollé como una aplicación web de un solo archivo (`index.html`) con HTML, Tailwind CSS, JavaScript puro, sonidos generados con Web Audio API y gráficos SVG, alojado en <strong>GitHub Pages</strong>. Escogí este formato interactivo porque permite que otro estudiante practique paso a paso sin aburrirse y consulte el Manual de Campo en el mismo sitio.'
+  }
+];
+
+function renderQA(){
+  document.getElementById('qa-container').innerHTML = QAS.map((item, i) => `
+    <div class="card p-5 space-y-2.5">
+      <div class="text-xs font-extrabold uppercase tracking-wider text-violet-400">Pregunta #${i+1}</div>
+      <h3 class="text-sm sm:text-base font-extrabold text-white">${esc(item.q)}</h3>
+      <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed">${rich(item.a).replace(/&lt;strong&gt;/g,'<strong class="text-white">').replace(/&lt;\/strong&gt;/g,'</strong>')}</p>
+    </div>
+  `).join('');
+}
+
+/* =========================================================
+   TAB 5: RÚBRICA (100 PUNTOS)
+   ========================================================= */
+const RUBRIC = [
+  { c: 'Ecuaciones lineales', where: 'Manual Pestaña 1 + Habitación 1 de los 5 niveles (pasos, variables ambos lados, ejemplo y práctica)', pts: 10 },
+  { c: 'Ecuaciones cuadráticas', where: 'Manual Pestaña 2 + Habitación 2 (igualar a 0, factorización, Producto Cero, ejemplo y práctica)', pts: 10 },
+  { c: 'Ecuaciones polinómicas', where: 'Manual Pestaña 3 + Habitación 3 (factor común, agrupación, cubos, raíces racionales y división sintética)', pts: 10 },
+  { c: 'Valor absoluto', where: 'Manual Pestaña 4 + Habitación 4 (aislamiento, dos casos, caso sin solución, ejemplo y práctica)', pts: 10 },
+  { c: 'Ecuaciones radicales', where: 'Manual Pestaña 5 + Habitación 5 (aislar, elevar, verificar y soluciones extrañas)', pts: 10 },
+  { c: 'Ecuaciones racionales', where: 'Manual Pestaña 6 + Habitación 6 (valores prohibidos, MCD, resolver y verificar)', pts: 10 },
+  { c: 'Exactitud matemática', where: 'Los 6 ejemplos del manual + los 30 ejercicios verificados en los 5 niveles', pts: 10 },
+  { c: 'Organización y legibilidad', where: 'Fracciones apiladas, raíces con barra, HUD limpio y Manual con pestañas ordenadas', pts: 10 },
+  { c: 'Creatividad y temática', where: 'Videojuego de terror Habitación 707, 3 vidas, 4 cuadritos, linterna, audio y revelación de Framaldo', pts: 15 },
+  { c: 'Presentación oral (~3 min)', where: 'Guion cronometrado en la Pestaña 1 de esta guía + demostración en vivo con el salón', pts: 5 }
+];
+
+function renderRubric(){
+  document.getElementById('rubric-rows').innerHTML = RUBRIC.map((r, i) => `
+    <tr class="hover:bg-zinc-900/50">
+      <td class="p-3.5 text-center"><input type="checkbox" checked onchange="recalcRubric()" data-pts="${r.pts}" class="rubric-chk w-4 h-4 accent-emerald-500 cursor-pointer" /></td>
+      <td class="p-3.5 font-bold text-white">${esc(r.c)}</td>
+      <td class="p-3.5 text-zinc-300">${esc(r.where)}</td>
+      <td class="p-3.5 text-right font-math font-bold text-emerald-400">${r.pts} pts</td>
+    </tr>
+  `).join('');
+}
+
+function recalcRubric(){
+  let total = 0;
+  document.querySelectorAll('.rubric-chk').forEach(ch => {
+    if(ch.checked) total += Number(ch.dataset.pts);
+  });
+  document.getElementById('rubric-score').textContent = `${total} / 100`;
+}
+
+// INIT
+renderLevelPills();
+renderAnswers();
+renderTopics();
+renderQA();
+renderRubric();
+</script>
+</body>
+</html>
